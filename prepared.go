@@ -40,6 +40,26 @@ type preparedFrame struct {
 // it to connection using WritePreparedMessage method. Valid wire
 // representation will be calculated lazily only once for a set of current
 // connection options.
+func WrapMessage(messageType int, data []byte) ([]byte, error) {
+	pm := &PreparedMessage{
+		messageType: messageType,
+		frames:      make(map[prepareKey]*preparedFrame),
+		data:        data,
+	}
+
+	// Prepare a plain server frame.
+	_, frameData, err := pm.frame(prepareKey{isServer: true, compress: false})
+	if err != nil {
+		return nil, err
+	}
+
+	return frameData, nil
+}
+
+// NewPreparedMessage returns an initialized PreparedMessage. You can then send
+// it to connection using WritePreparedMessage method. Valid wire
+// representation will be calculated lazily only once for a set of current
+// connection options.
 func NewPreparedMessage(messageType int, data []byte) (*PreparedMessage, error) {
 	pm := &PreparedMessage{
 		messageType: messageType,
